@@ -301,7 +301,7 @@ func (m *MempoolData) GetNumTickets() uint32 {
 	return m.NumTickets
 }
 
-// GetNumTickets returns the number of votes
+// GetNumVotes returns the number of votes
 func (m *MempoolData) GetNumVotes() uint32 {
 	return m.NumVotes
 }
