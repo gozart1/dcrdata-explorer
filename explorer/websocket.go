@@ -15,6 +15,7 @@ const (
 	sigNewBlock    hubSignal = iota
 	sigMempoolUpdate
 	sigPingAndUserCount
+	sigNewTx
 )
 
 // WebSocketMessage represents the JSON object used to send and received typed
@@ -29,6 +30,7 @@ var eventIDs = map[hubSignal]string{
 	sigNewBlock:         "newblock",
 	sigMempoolUpdate:    "mempool",
 	sigPingAndUserCount: "ping",
+	sigNewTx:            "newtx",
 }
 
 // WebsocketHub and its event loop manage all websocket client connections.
@@ -36,12 +38,12 @@ var eventIDs = map[hubSignal]string{
 // If the event loop is running, calling (*WebsocketHub).Stop() will handle it.
 type WebsocketHub struct {
 	sync.RWMutex
-	clients         map[*hubSpoke]struct{}
-	Register        chan *hubSpoke
-	Unregister      chan *hubSpoke
-	HubRelay        chan hubSignal
-	NewBlockSummary chan BlockBasic
-	quitWSHandler   chan struct{}
+	clients       map[*hubSpoke]chan *NewMempoolTx
+	Register      chan *hubSpoke
+	Unregister    chan *hubSpoke
+	HubRelay      chan hubSignal
+	NewTxChan     chan *NewMempoolTx
+	quitWSHandler chan struct{}
 }
 
 type hubSignal int
@@ -50,10 +52,11 @@ type hubSpoke chan hubSignal
 // NewWebsocketHub creates a new WebsocketHub
 func NewWebsocketHub() *WebsocketHub {
 	return &WebsocketHub{
-		clients:       make(map[*hubSpoke]struct{}),
+		clients:       make(map[*hubSpoke]chan *NewMempoolTx),
 		Register:      make(chan *hubSpoke),
 		Unregister:    make(chan *hubSpoke),
 		HubRelay:      make(chan hubSignal),
+		NewTxChan:     make(chan *NewMempoolTx),
 		quitWSHandler: make(chan struct{}),
 	}
 }
@@ -71,7 +74,7 @@ func (wsh *WebsocketHub) RegisterClient(c *hubSpoke) {
 
 // registerClient should only be called from the run loop
 func (wsh *WebsocketHub) registerClient(c *hubSpoke) {
-	wsh.clients[c] = struct{}{}
+	wsh.clients[c] = make(chan *NewMempoolTx)
 }
 
 // UnregisterClient unregisters the input websocket connection via the main
@@ -121,6 +124,7 @@ func (wsh *WebsocketHub) run() {
 	events:
 		select {
 		case hubSignal := <-wsh.HubRelay:
+			var newtx *NewMempoolTx
 			switch hubSignal {
 			case sigNewBlock:
 				log.Infof("Signaling new block to %d clients.", len(wsh.clients))
@@ -128,15 +132,22 @@ func (wsh *WebsocketHub) run() {
 				log.Tracef("Signaling ping/user count to %d clients.", len(wsh.clients))
 			case sigMempoolUpdate:
 				log.Infof("Signaling mempool update to %d clients.", len(wsh.clients))
+			case sigNewTx:
+				newtx = <-wsh.NewTxChan
+				log.Infof("Signaling new tx %s to %d clients.", newtx.Hash, len(wsh.clients))
 			default:
 				log.Errorf("Unknown hub signal: %v", hubSignal)
 				break events
 			}
-			for client := range wsh.clients {
+			for client, txchan := range wsh.clients {
 				// signal or unregister the client
 				select {
 				case *client <- hubSignal:
+					if newtx != nil {
+						txchan <- newtx
+					}
 				default:
+					log.Debug("Unregistering client from client loop, hub :", eventIDs[hubSignal])
 					wsh.unregisterClient(client)
 				}
 			}

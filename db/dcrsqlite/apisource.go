@@ -1189,3 +1189,28 @@ func (db *wiredDB) CountUnconfirmedTransactions(address string, maxUnconfirmedPo
 	}
 	return
 }
+
+func (db *wiredDB) GetMempool(txtype dcrjson.GetRawMempoolTxTypeCmd) []explorer.MempoolTx {
+	mempooltxs, err := db.client.GetRawMempoolVerbose(txtype)
+	if err != nil {
+		return nil
+	}
+
+	txs := make([]explorer.MempoolTx, 0, len(mempooltxs))
+
+	for hash, tx := range mempooltxs {
+		rawtx, _ := db.getRawTransaction(hash)
+		total := 0.0
+		for _, v := range rawtx.Vout {
+			total += v.Value
+		}
+		txs = append(txs, explorer.MempoolTx{
+			Hash:     hash,
+			Time:     tx.Time,
+			Size:     tx.Size,
+			TotalOut: total,
+		})
+	}
+
+	return txs
+}

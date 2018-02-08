@@ -18,7 +18,7 @@ import (
 func (exp *explorerUI) RootWebsocket(w http.ResponseWriter, r *http.Request) {
 	wsHandler := websocket.Handler(func(ws *websocket.Conn) {
 		// Create channel to signal updated data availability
-		updateSig := make(hubSpoke)
+		updateSig := make(hubSpoke, 3)
 		// register websocket client with our signal channel
 		exp.wsHub.RegisterClient(&updateSig)
 		// unregister (and close signal channel) before return
@@ -48,6 +48,7 @@ func (exp *explorerUI) RootWebsocket(w http.ResponseWriter, r *http.Request) {
 				ws.SetReadDeadline(time.Now().Add(wsReadTimeout))
 				if err := websocket.JSON.Receive(ws, &msg); err != nil {
 					log.Warnf("websocket client receive error: %v", err)
+					exp.wsHub.UnregisterClient(&updateSig)
 					return
 				}
 
@@ -152,6 +153,10 @@ func (exp *explorerUI) RootWebsocket(w http.ResponseWriter, r *http.Request) {
 				case sigPingAndUserCount:
 					// ping and send user count
 					webData.Message = strconv.Itoa(exp.wsHub.NumClients())
+				case sigNewTx:
+					tx := <-exp.wsHub.clients[&updateSig]
+					enc.Encode(tx)
+					webData.Message = buff.String()
 				}
 
 				ws.SetWriteDeadline(time.Now().Add(wsWriteTimeout))

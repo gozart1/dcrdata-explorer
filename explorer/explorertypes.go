@@ -190,8 +190,10 @@ type BlockSubsidy struct {
 // MempoolInfo models data to update mempool info on the home page
 type MempoolInfo struct {
 	sync.RWMutex
-	NumTickets uint32 `json:"num_tickets"`
-	NumVotes   uint32 `json:"num_votes"`
+	NumTickets   uint32      `json:"num_tickets"`
+	NumVotes     uint32      `json:"num_votes"`
+	Tickets      []MempoolTx `json:"tickets"`
+	Transactions []MempoolTx `json:"tx"`
 }
 
 // ChainParams models simple data about the chain server's parameters used for some
@@ -268,4 +270,16 @@ type TicketPoolInfo struct {
 	Percentage    float64 `json:"percent"`
 	Target        uint16  `json:"target"`
 	PercentTarget float64 `json:"percent_target"`
+}
+
+type MempoolTx struct {
+	Hash     string  `json:"hash"`
+	Time     int64   `json:"time"`
+	Size     int32   `json:"size"`
+	TotalOut float64 `json:"total"`
+}
+
+type NewMempoolTx struct {
+	MempoolTx
+	Type string
 }

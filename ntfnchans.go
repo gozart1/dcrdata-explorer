@@ -6,6 +6,7 @@ package main
 import (
 	"github.com/dcrdata/dcrdata/blockdata"
 	"github.com/dcrdata/dcrdata/db/dcrsqlite"
+	"github.com/dcrdata/dcrdata/explorer"
 	"github.com/dcrdata/dcrdata/mempool"
 	"github.com/dcrdata/dcrdata/stakedb"
 	"github.com/dcrdata/dcrdata/txhelpers"
@@ -41,6 +42,7 @@ var ntfnChans struct {
 	spendTxBlockChan, recvTxBlockChan chan *txhelpers.BlockWatchedTx
 	relevantTxMempoolChan             chan *dcrutil.Tx
 	newTxChan                         chan *mempool.NewTx
+	expNewTxChan                      chan *explorer.NewMempoolTx
 }
 
 func makeNtfnChans(cfg *config) {
@@ -77,6 +79,9 @@ func makeNtfnChans(cfg *config) {
 	if cfg.MonitorMempool {
 		ntfnChans.newTxChan = make(chan *mempool.NewTx, newTxChanBuffer)
 	}
+
+	// New mempool tx chan for explorer
+	ntfnChans.expNewTxChan = make(chan *explorer.NewMempoolTx, newTxChanBuffer)
 }
 
 func closeNtfnChans() {
@@ -119,5 +124,8 @@ func closeNtfnChans() {
 	}
 	if ntfnChans.recvTxBlockChan != nil {
 		close(ntfnChans.recvTxBlockChan)
+	}
+	if ntfnChans.expNewTxChan != nil {
+		close(ntfnChans.expNewTxChan)
 	}
 }

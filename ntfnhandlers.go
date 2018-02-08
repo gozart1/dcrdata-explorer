@@ -10,9 +10,12 @@ import (
 
 	"github.com/dcrdata/dcrdata/blockdata"
 	"github.com/dcrdata/dcrdata/db/dcrsqlite"
+	"github.com/dcrdata/dcrdata/explorer"
 	"github.com/dcrdata/dcrdata/mempool"
 	"github.com/dcrdata/dcrdata/stakedb"
+	"github.com/dcrdata/dcrdata/txhelpers"
 	"github.com/decred/dcrd/chaincfg/chainhash"
+	"github.com/decred/dcrd/dcrjson"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/decred/dcrd/rpcclient"
 	"github.com/decred/dcrd/wire"
@@ -37,6 +40,10 @@ func registerNodeNtfnHandlers(dcrdClient *rpcclient.Client) *ContextualError {
 	if err = dcrdClient.NotifyNewTransactions(false); err != nil {
 		return newContextualError("new transaction "+
 			"notification registration failed", err)
+	}
+
+	if err = dcrdClient.NotifyNewTransactions(true); err != nil {
+		return newContextualError("new transaction verbose notification registration failed", err)
 	}
 
 	// For OnNewTickets
@@ -98,12 +105,17 @@ func (q *collectionQueue) ProcessBlocks() {
 
 		log.Debugf("Synchronous handlers of collectionQueue.ProcessBlocks() completed in %v", time.Since(start))
 
-		// Signal to mempool monitor that a block was mined
+		// Signal to mempool monitors that a block was mined
 		select {
 		case ntfnChans.newTxChan <- &mempool.NewTx{
 			Hash: nil,
 			T:    time.Now(),
 		}:
+		default:
+		}
+
+		select {
+		case ntfnChans.expNewTxChan <- nil:
 		default:
 		}
 
@@ -237,10 +249,21 @@ func makeNodeNtfnHandlers(cfg *config) (*rpcclient.NotificationHandlers, *collec
 			}
 			//log.Trace("Transaction accepted to mempool: ", hash, amount)
 		},
-		// Note: dcrjson.TxRawResult is from getrawtransaction
-		//OnTxAcceptedVerbose: func(txDetails *dcrjson.TxRawResult) {
-		//txDetails.Hex
-		//log.Info("Transaction accepted to mempool: ", txDetails.Txid)
-		//},
+
+		OnTxAcceptedVerbose: func(txDetails *dcrjson.TxRawResult) {
+			select {
+			case ntfnChans.expNewTxChan <- &explorer.NewMempoolTx{
+				MempoolTx: explorer.MempoolTx{
+					Hash:     txDetails.Txid,
+					Time:     time.Now().Unix(),
+					Size:     int32(len(txDetails.Hex) / 2),
+					TotalOut: txhelpers.TotalVout(txDetails.Vout).ToCoin(),
+				},
+				Type: txhelpers.DetermineTxTypeString(txhelpers.MsgTxFromHex(txDetails.Hex)),
+			}:
+			default:
+				log.Warn("expNewTxChan buffer full!")
+			}
+		},
 	}, blockQueue
 }

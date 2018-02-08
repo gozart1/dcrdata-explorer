@@ -1,0 +1,64 @@
+{{define "mempool"}}
+<!DOCTYPE html>
+<html lang="en">
+    {{template "html-head" printf "Decred mempool"}}
+    <body>
+        {{template "navbar"}}
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6">
+                    <h4><span>Tickets</span></h4>
+                    <table class="table table-sm striped" id="tickets">
+                        <thead>
+                            <th>Hash</th>
+                            <th class="text-right">Price</th>
+                            <th class="text-right">Time in Mempool</th>
+                            <th>Size</th>
+                        </thead>
+                        <tbody>
+                            {{range .Mempool.Tickets}}
+                            <tr>
+                                <td class="break-word">
+                                    <span>
+                                        <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
+                                    </span>
+                                </td>
+                                <td class="mono fs15 text-right">{{.TotalOut}}</td>
+                                <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
+                                <td class="mono fs15">{{.Size}}</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm-6">
+                    <h4><span>Transactions</span></h4>
+                    <table class="table table-sm striped" id="transactions">
+                        <thead>
+                            <th>Hash</th>
+                            <th class="text-right">Total Sent</th>
+                            <th class="text-right">Time in Mempool</th>
+                            <th>Size</th>
+                        </thead>
+                        <tbody>
+                            {{range .Mempool.Transactions}}
+                            <tr>
+                                <td class="break-word">
+                                    <span>
+                                        <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
+                                    </span>
+                                </td>
+                                <td class="mono fs15 text-right">{{.TotalOut}}</td>
+                                <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
+                                <td class="mono fs15">{{.Size}}</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {{ template "footer" . }}
+    </body>
+</html>
+{{end}}

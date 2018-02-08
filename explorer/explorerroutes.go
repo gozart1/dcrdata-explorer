@@ -115,6 +115,28 @@ func (exp *explorerUI) Block(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
+// Mempool is the page handler for the "/mempool" path
+func (exp *explorerUI) Mempool(w http.ResponseWriter, r *http.Request) {
+	exp.MempoolData.RLock()
+	str, err := templateExecToString(exp.templates[mempoolTemplateIndex], "mempool", struct {
+		Mempool *MempoolInfo
+		Version string
+	}{
+		exp.MempoolData,
+		exp.Version,
+	})
+	exp.MempoolData.RUnlock()
+
+	if err != nil {
+		log.Errorf("Template execute failure: %v", err)
+		exp.ErrorPage(w, "Something went wrong...", "and it's not your fault, try refreshing... that usually fixes things", false)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, str)
+}
+
 // TxPage is the page handler for the "/tx" path
 func (exp *explorerUI) TxPage(w http.ResponseWriter, r *http.Request) {
 	// attempt to get tx hash string from URL path

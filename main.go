@@ -280,11 +280,10 @@ func mainCore() error {
 	mempoolSavers = append(mempoolSavers, sqliteDB.MPC)
 
 	// Start the explorer system
-	explore := explorer.New(&sqliteDB, db, cfg.UseRealIP, ver.String())
+	explore := explorer.New(&sqliteDB, db, cfg.UseRealIP, ver.String(), ntfnChans.expNewTxChan)
 	explore.UseSIGToReloadTemplates()
 	defer explore.StopWebsocketHub()
 	blockDataSavers = append(blockDataSavers, explore)
-	mempoolSavers = append(mempoolSavers, explore)
 
 	// Initial data summary for web ui
 	blockData, _, err := collector.Collect()
@@ -356,12 +355,6 @@ func mainCore() error {
 				err.Error())
 		}
 
-		// Store initial MP data to explore
-		if err = explore.StoreMPData(mpData, time.Now()); err != nil {
-			return fmt.Errorf("Failed to store initial mempool data (explore): %v",
-				err.Error())
-		}
-
 		// Setup monitor
 		mpi := &mempool.MempoolInfo{
 			CurrentHeight:               mpData.GetHeight(),
@@ -418,6 +411,7 @@ func mainCore() error {
 
 	webMux.Mount("/explorer", explore.Mux)
 	webMux.Get("/blocks", explore.Blocks)
+	webMux.Get("/mempool", explore.Mempool)
 	webMux.With(explore.BlockHashPathOrIndexCtx).Get("/block/{blockhash}", explore.Block)
 	webMux.With(explorer.TransactionHashCtx).Get("/tx/{txid}", explore.TxPage)
 	webMux.With(explorer.AddressPathCtx).Get("/address/{address}", explore.AddressPage)

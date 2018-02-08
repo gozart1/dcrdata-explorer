@@ -153,6 +153,38 @@
             updateConnectionStatus('Disconnected', false);
         });
 
+        ws.registerEvtHandler("newtx", function(evt) {
+            console.log("New Transaction: ", evt);
+            var tx = JSON.parse(evt)
+            addTxRow = function(str) {
+                var row = $('#' + str +' tbody tr')
+                var newRow = '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
+                    tx.hash + '">' + tx.hash + '</a></span></td>' +
+                    '<td class="mono fs15 text-right">' + tx.total +'</td>' +
+                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
+                    '<td class="mono fs15">' + tx.size + '</td></tr>'
+                var newRowHtml = $.parseHTML(newRow)
+                $(newRowHtml).insertBefore(row.first())
+                setTimeElements()
+            }
+            switch (tx.Type) {
+                case "Ticket":
+                    $('#mempoolfeeinfo_number').text(parseInt($('#mempoolfeeinfo_number').text()) + 1)
+                    if (window.location.pathname == "/mempool") {
+                        addTxRow('tickets')
+                    }
+                    break
+                case "Vote":
+                    $('#mempool_vote_number').text(parseInt($('#mempool_vote_number').text()) + 1)
+                    break
+                case "Regular":
+                    if (window.location.pathname == "/mempool") {
+                        addTxRow('transactions')
+                    }
+                    break
+                }
+        });
+
         ws.registerEvtHandler("ping", function(evt) {
             console.log("ping. users online: ", evt)
             //ws.send("pong", "copy")
@@ -229,6 +261,27 @@
             //mempool info
             $('#mempoolfeeinfo_number').text(m.num_tickets)
             $('#mempool_vote_number').text(m.num_votes)
+            if (window.location.pathname == "/mempool") {
+                var newTable = ""
+                m.tickets.forEach(function (tx) {
+                    newTable += '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
+                    tx.hash + '">' + tx.hash + '</a></span></td>' +
+                    '<td class="mono fs15 text-right">' + tx.total +'</td>' +
+                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
+                    '<td class="mono fs15">' + tx.size + '</td></tr>'
+                })
+                $('#tickets tbody').html(newTable)
+
+                newTable = ""
+                m.tx.forEach(function (tx) {
+                    newTable += '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
+                    tx.hash + '">' + tx.hash + '</a></span></td>' +
+                    '<td class="mono fs15 text-right">' + tx.total +'</td>' +
+                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
+                    '<td class="mono fs15">' + tx.size + '</td></tr>'
+                })
+                $('#transactions tbody').html(newTable)
+            }
         };
         ws.registerEvtHandler("mempool", updateMempool);
     }
