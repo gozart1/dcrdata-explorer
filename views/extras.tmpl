@@ -186,6 +186,10 @@
                     if (window.location.pathname == "/mempool") {
                         addTxRow('transactions')
                     }
+                    if (window.location.pathname == "/") {
+                        $('#mini-transactions tbody tr').last().remove()
+                        addTxRow('mini-transactions')
+                    }
                     break
                 }
         });
@@ -295,6 +299,24 @@
                     '<td class="mono fs15">' + tx.size + '</td></tr>'
                 })
                 $('#transactions tbody').html(newTable)
+                setTimeElements()
+            }
+
+            if (window.location.pathname == "/") {
+                var newTable = ""
+                for (var i= 0; i < 5; i++) {
+                    tx = m.tx[i]
+                    var totalTxt = "" 
+                    humanize.decimalParts(tx.total, false, 8).forEach(function (str) {
+                        totalTxt += str.textContent
+                    })
+                    newTable += '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
+                    tx.hash + '">' + tx.hash + '</a></span></td>' +
+                    '<td class="mono fs15 text-right">' + totalTxt +'</td>' +
+                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
+                    '<td class="mono fs15">' + tx.size + '</td></tr>'
+                }
+                $('#mini-transactions tbody').html(newTable)
                 setTimeElements()
             }
         };

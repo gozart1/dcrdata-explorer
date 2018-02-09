@@ -9,52 +9,49 @@ import (
 func (exp *explorerUI) mempoolMonitor(txChan chan *NewMempoolTx) {
 	exp.storeMempoolInfo()
 	for {
-		select {
-		case tx, ok := <-txChan:
-			if !ok {
-				log.Infof("New Tx channel closed")
-				return
-			}
-
-			// A nil tx is the signal to stop
-			if tx == nil {
-				return
-			}
-
-			// A tx with an empty Type is the new block signal
-			if tx.Type == "" {
-				exp.storeMempoolInfo()
-				exp.wsHub.HubRelay <- sigMempoolUpdate
-				continue
-			}
-
-			// Ignore this tx if it was received before the last block
-			exp.NewBlockDataMtx.Lock()
-			lastBlockTime := exp.NewBlockData.BlockTime
-			exp.NewBlockDataMtx.Unlock()
-
-			if tx.Time > lastBlockTime {
-				continue
-			}
-
-			exp.MempoolData.Lock()
-			// Add the tx to the appropriate tx slice and update the count
-			switch tx.Type {
-			case "Ticket":
-				exp.MempoolData.NumTickets++
-				exp.MempoolData.Tickets = append([]MempoolTx{tx.MempoolTx}, exp.MempoolData.Tickets...)
-			case "Vote":
-				exp.MempoolData.NumVotes++
-			case "Regular":
-				exp.MempoolData.Transactions = append([]MempoolTx{tx.MempoolTx}, exp.MempoolData.Transactions...)
-			case "Revocation":
-				log.Trace("Received revoke transaction")
-			}
-			exp.MempoolData.Unlock()
-			exp.wsHub.HubRelay <- sigNewTx
-			exp.wsHub.NewTxChan <- tx
-
+		tx, ok := <-txChan
+		if !ok {
+			log.Infof("New Tx channel closed")
+			return
 		}
+
+		// A nil tx is the signal to stop
+		if tx == nil {
+			return
+		}
+
+		// A tx with an empty Type is the new block signal
+		if tx.Type == "" {
+			exp.storeMempoolInfo()
+			exp.wsHub.HubRelay <- sigMempoolUpdate
+			continue
+		}
+
+		// Ignore this tx if it was received before the last block
+		exp.NewBlockDataMtx.Lock()
+		lastBlockTime := exp.NewBlockData.BlockTime
+		exp.NewBlockDataMtx.Unlock()
+
+		if tx.Time > lastBlockTime {
+			continue
+		}
+
+		exp.MempoolData.Lock()
+		// Add the tx to the appropriate tx slice and update the count
+		switch tx.Type {
+		case "Ticket":
+			exp.MempoolData.NumTickets++
+			exp.MempoolData.Tickets = append([]MempoolTx{tx.MempoolTx}, exp.MempoolData.Tickets...)
+		case "Vote":
+			exp.MempoolData.NumVotes++
+		case "Regular":
+			exp.MempoolData.Transactions = append([]MempoolTx{tx.MempoolTx}, exp.MempoolData.Transactions...)
+		case "Revocation":
+			log.Trace("Received revoke transaction")
+		}
+		exp.MempoolData.Unlock()
+		exp.wsHub.HubRelay <- sigNewTx
+		exp.wsHub.NewTxChan <- tx
 	}
 }
 

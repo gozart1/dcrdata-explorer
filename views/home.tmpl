@@ -184,6 +184,33 @@
 
             </div>
 
+            <div class="col-md-6">
+                <h4 class="mb-3">Latest Transactions</h4>
+                <table class="table table-sm striped" id="mini-transactions">
+                    <thead>
+                        <th>Hash</th>
+                        <th class="text-right">Total Sent (DCR)</th>
+                        <th class="text-right">Time in Mempool</th>
+                        <th>Size</th>
+                    </thead>
+                    <tbody>
+                        {{range .Mempool.Transactions}}
+                            <tr>
+                                <td class="break-word">
+                                    <span>
+                                        <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
+                                    </span>
+                                </td>
+                                <td class="mono fs15 text-right">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</td>
+                                <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
+                                <td class="mono fs15">{{.Size}} B</td>
+                            </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                <div class="mb-3"><a href="/mempool"><small>More transactions and tickets...</small></a></div>
+            </div>
+
         </div>
 
     </div>
