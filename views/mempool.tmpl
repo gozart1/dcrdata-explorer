@@ -7,11 +7,11 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-6">
-                    <h4><span>Tickets</span></h4>
+                    <h4><span>Tickets (<span id="mempool_ticket_number" class="mono fs24">{{.Mempool.NumTickets}}</span>)</span></h4>
                     <table class="table table-sm striped" id="tickets">
                         <thead>
                             <th>Hash</th>
-                            <th class="text-right">Price</th>
+                            <th class="text-right">Price (DCR)</th>
                             <th class="text-right">Time in Mempool</th>
                             <th>Size</th>
                         </thead>
@@ -23,20 +23,20 @@
                                         <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
                                     </span>
                                 </td>
-                                <td class="mono fs15 text-right">{{.TotalOut}}</td>
+                                <td class="mono fs15 text-right">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</td>
                                 <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
-                                <td class="mono fs15">{{.Size}}</td>
+                                <td class="mono fs15">{{.Size}} B</td>
                             </tr>
                             {{end}}
                         </tbody>
                     </table>
                 </div>
                 <div class="col-sm-6">
-                    <h4><span>Transactions</span></h4>
+                    <h4><span>Transactions (<span id="mempool_tx_number" class="mono fs24">{{len .Mempool.Transactions}}</span>)</span></h4>
                     <table class="table table-sm striped" id="transactions">
                         <thead>
                             <th>Hash</th>
-                            <th class="text-right">Total Sent</th>
+                            <th class="text-right">Total Sent (DCR)</th>
                             <th class="text-right">Time in Mempool</th>
                             <th>Size</th>
                         </thead>
@@ -48,9 +48,9 @@
                                         <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
                                     </span>
                                 </td>
-                                <td class="mono fs15 text-right">{{.TotalOut}}</td>
+                                <td class="mono fs15 text-right">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</td>
                                 <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
-                                <td class="mono fs15">{{.Size}}</td>
+                                <td class="mono fs15">{{.Size}} B</td>
                             </tr>
                             {{end}}
                         </tbody>

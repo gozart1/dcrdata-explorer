@@ -283,6 +283,8 @@ func mainCore() error {
 	explore := explorer.New(&sqliteDB, db, cfg.UseRealIP, ver.String(), ntfnChans.expNewTxChan)
 	explore.UseSIGToReloadTemplates()
 	defer explore.StopWebsocketHub()
+	defer explore.StopMempoolMonitor(ntfnChans.expNewTxChan)
+
 	blockDataSavers = append(blockDataSavers, explore)
 
 	// Initial data summary for web ui

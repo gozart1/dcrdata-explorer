@@ -115,7 +115,9 @@ func (q *collectionQueue) ProcessBlocks() {
 		}
 
 		select {
-		case ntfnChans.expNewTxChan <- nil:
+		case ntfnChans.expNewTxChan <- &explorer.NewMempoolTx{
+			Type: "",
+		}:
 		default:
 		}
 
@@ -250,6 +252,9 @@ func makeNodeNtfnHandlers(cfg *config) (*rpcclient.NotificationHandlers, *collec
 			//log.Trace("Transaction accepted to mempool: ", hash, amount)
 		},
 
+		// OnTxAcceptedVerbose is invoked same as OnTxAccepted but is used here
+		// for the explorer mempool monitor to avoid an extra call to dcrd for
+		// the tx details
 		OnTxAcceptedVerbose: func(txDetails *dcrjson.TxRawResult) {
 			select {
 			case ntfnChans.expNewTxChan <- &explorer.NewMempoolTx{
