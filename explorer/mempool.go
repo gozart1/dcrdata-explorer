@@ -124,9 +124,6 @@ func (exp *explorerUI) storeMempoolInfo() {
 			time.Since(start))
 	}(time.Now())
 
-	exp.MempoolData.Lock()
-	defer exp.MempoolData.Unlock()
-
 	memtxs := exp.blockData.GetMempool()
 
 	if memtxs == nil {
@@ -170,6 +167,9 @@ func (exp *explorerUI) storeMempoolInfo() {
 	lastBlockTime := exp.NewBlockData.BlockTime
 	exp.NewBlockDataMtx.Unlock()
 
+	exp.MempoolData.Lock()
+	defer exp.MempoolData.Unlock()
+
 	exp.MempoolData.Transactions = regular
 	exp.MempoolData.Tickets = tickets
 	exp.MempoolData.Revocations = revs
@@ -201,28 +201,5 @@ func (txs byTime) Len() int {
 }
 
 func (txs byTime) Swap(i, j int) {
-	txs[i], txs[j] = txs[j], txs[i]
-}
-
-type byType []MempoolTx
-
-func (txs byType) Less(i, j int) bool {
-	weights := map[string]int{
-		"Vote":       0,
-		"Ticket":     1,
-		"Revocation": 2,
-		"Regular":    3,
-	}
-	if txs[i].Type == txs[j].Type {
-		return txs[i].Time > txs[j].Time
-	}
-	return weights[txs[i].Type] < weights[txs[j].Type]
-}
-
-func (txs byType) Len() int {
-	return len(txs)
-}
-
-func (txs byType) Swap(i, j int) {
 	txs[i], txs[j] = txs[j], txs[i]
 }

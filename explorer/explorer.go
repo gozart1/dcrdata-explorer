@@ -443,7 +443,7 @@ func New(dataSource explorerDataSourceLite, primaryDataSource explorerDataSource
 		exp.templateFiles["extras"],
 	)
 	if err != nil {
-		log.Errorf("Unable to create new html template: %v", err)
+		return noTemplateError(err)
 	}
 	exp.templates = append(exp.templates, mempoolTemplate)
 

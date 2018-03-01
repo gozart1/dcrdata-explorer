@@ -215,7 +215,7 @@
                     '<td class="mono fs15">' + tx.Type + '</td>' +
                     '<td class="mono fs15">' + totalTxt +'</td>' +
                     '<td class="mono fs15">' + tx.size + ' B</td>' +
-                    '<td class="mono fs15" data-age="' + tx.time +'"></td></tr>'
+                    '<td class="mono fs15" data-age="' + tx.time +'">' + humanize.timeSince(tx.time) +'</td></tr>'
                 var newRowHtml = $.parseHTML(newRow)
                 rows.last().remove()
                 $(newRowHtml).insertBefore(rows.first())

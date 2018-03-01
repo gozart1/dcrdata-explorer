@@ -974,7 +974,7 @@ func (db *wiredDB) GetExplorerBlock(hash string) *explorer.BlockInfo {
 	for _, tx := range data.RawSTx {
 		msgTx, err := txhelpers.MsgTxFromHex(tx.Hex)
 		if err != nil {
-			log.Errorf("Unknown transaction %s", tx.Txid)
+			log.Errorf("Unknown transaction %s: %v", tx.Txid, err)
 			return nil
 		}
 		switch stake.DetermineTxType(msgTx) {
@@ -1058,7 +1058,7 @@ func (db *wiredDB) GetExplorerTx(txid string) *explorer.TxInfo {
 	}
 	msgTx, err := txhelpers.MsgTxFromHex(txraw.Hex)
 	if err != nil {
-		log.Errorf("Cannot create MsgTx for tx %v", txhash)
+		log.Errorf("Cannot create MsgTx for tx %v: %v", txhash, err)
 		return nil
 	}
 	txBasic := makeExplorerTxBasic(*txraw, msgTx, db.params)

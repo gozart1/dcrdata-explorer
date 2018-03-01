@@ -36,11 +36,6 @@ func registerNodeNtfnHandlers(dcrdClient *rpcclient.Client) *ContextualError {
 	// }
 
 	// Register for tx accepted into mempool ntfns
-	// if err = dcrdClient.NotifyNewTransactions(false); err != nil {
-	// 	return newContextualError("new transaction "+
-	// 		"notification registration failed", err)
-	// }
-
 	if err = dcrdClient.NotifyNewTransactions(true); err != nil {
 		return newContextualError("new transaction verbose notification registration failed", err)
 	}

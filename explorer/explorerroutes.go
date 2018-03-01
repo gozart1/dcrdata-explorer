@@ -19,7 +19,7 @@ func (exp *explorerUI) Home(w http.ResponseWriter, r *http.Request) {
 	blocks := exp.blockData.GetExplorerBlocks(height, height-5)
 
 	exp.NewBlockDataMtx.Lock()
-	exp.MempoolData.Lock()
+	exp.MempoolData.RLock()
 	str, err := templateExecToString(exp.templates[homeTemplateIndex], "home", struct {
 		Info    *HomeInfo
 		Mempool *MempoolInfo
@@ -32,7 +32,7 @@ func (exp *explorerUI) Home(w http.ResponseWriter, r *http.Request) {
 		exp.Version,
 	})
 	exp.NewBlockDataMtx.Unlock()
-	exp.MempoolData.Unlock()
+	exp.MempoolData.RUnlock()
 
 	if err != nil {
 		log.Errorf("Template execute failure: %v", err)
@@ -137,7 +137,7 @@ func (exp *explorerUI) Block(w http.ResponseWriter, r *http.Request) {
 
 // Mempool is the page handler for the "/mempool" path
 func (exp *explorerUI) Mempool(w http.ResponseWriter, r *http.Request) {
-	exp.MempoolData.Lock()
+	exp.MempoolData.RLock()
 	str, err := templateExecToString(exp.templates[mempoolTemplateIndex], "mempool", struct {
 		Mempool *MempoolInfo
 		Version string
@@ -145,7 +145,7 @@ func (exp *explorerUI) Mempool(w http.ResponseWriter, r *http.Request) {
 		exp.MempoolData,
 		exp.Version,
 	})
-	exp.MempoolData.Unlock()
+	exp.MempoolData.RUnlock()
 
 	if err != nil {
 		log.Errorf("Template execute failure: %v", err)
