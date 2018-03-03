@@ -28,6 +28,8 @@
     <script src="/js/humanize.js"></script>
     <script src="/js/turbolinks.js"></script>
     <script src="/js/jquery.js"></script>
+    <script src="/js/lodash.min.js"></script>
+
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -156,26 +158,12 @@
         ws.registerEvtHandler("newtx", function(evt) {
             console.log("New Transaction: ", evt);
             var tx = JSON.parse(evt)
-            addTxRow = function(str) {
-                var rows = $('#' + str +' tbody tr')
-                var totalTxt = "" 
-                humanize.decimalParts(tx.total, false, 8).forEach(function (str) {
-                    totalTxt += str.textContent
-                })
-                var newRow = '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
-                    tx.hash + '">' + tx.hash + '</a></span></td>' +
-                    '<td class="mono fs15 text-right"> ' + totalTxt +'</td>' +
-                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
-                    '<td class="mono fs15">' + tx.size + '</td></tr>'
-                var newRowHtml = $.parseHTML(newRow)
-                $(newRowHtml).insertBefore(rows.first())
-                setTimeElements()
-            }
+
             switch (tx.Type) {
                 case "Ticket":
                     $('#mempool_ticket_number').text(parseInt($('#mempool_ticket_number').text()) + 1)
                     if (window.location.pathname == "/mempool") {
-                        addTxRow('tickets')
+                        addTxRow('tickets', tx)
                     }
                     break
                 case "Vote":
@@ -184,18 +172,18 @@
                 case "Regular":
                     $('#mempool_tx_number').text(parseInt($('#mempool_tx_number').text()) + 1)
                     if (window.location.pathname == "/mempool") {
-                        addTxRow('transactions')
+                        addTxRow('transactions', tx)
                     }
                     if (window.location.pathname == "/") {
-                        $('#mini-transactions tbody tr').last().remove()
-                        addTxRow('mini-transactions')
+                        $('#transactions div').last().remove()
+                        addTxRow('transactions', tx)
                     }
                     break
                 }
         });
 
         ws.registerEvtHandler("ping", function(evt) {
-            console.log("ping. users online: ", evt)
+            // console.log("ping. users online: ", evt)
             //ws.send("pong", "copy")
         });
         ws.registerEvtHandler("decodetxResp", function(evt) {
@@ -263,60 +251,45 @@
         };
         ws.registerEvtHandler("newblock", updateBlockData);
 
+        function txRowHTML(tx) {
+            var totalTxt = ""
+            humanize.decimalParts(tx.total, false, 8).forEach(function (str) {
+                totalTxt += str.textContent
+            })
+            return '<div class="d-flex">'
+                + '<a class="hash truncate-hash" style="flex: 1 1 auto" href="/tx/' + tx.hash + '">' + tx.hash + '</a>'
+                + '<span style="flex: 0 0 105px" class="mono fs15 text-right ml-1">' + totalTxt +'</span>'
+                + '<span style="flex: 0 0 65px" class="mono fs15 text-right ml-1" data-age="' + tx.size + '"></span>'
+                + '<span style="flex: 0 0 50px" class="mono fs15  text-right ml-1">' + tx.size + '</span>'
+            + '</div>'
+        }
+
+        function addTxRow(id, tx) {
+            console.log("addTxRow", id, tx)
+            $('#' + id).prepend($.parseHTML(txRowHTML(tx)))
+            setTimeElements()
+        }
+
+        function txRowsHTML(txArr) {
+            return $.parseHTML(txArr.map(txRowHTML).join(""))
+        }
+
         var updateMempool = function (event) {
             console.log("Received mempool message", event);
             var m = JSON.parse(event);
-
-            //mempool info
+            // mempool summary
             $('#mempool_ticket_number').text(m.num_tickets)
             $('#mempool_vote_number').text(m.num_votes)
             $('#mempool_tx_number').text(m.tx.length)
-            if (window.location.pathname == "/mempool") {
-                var newTable = ""
-                m.tickets.forEach(function (tx) {
-                    var totalTxt = "" 
-                    humanize.decimalParts(tx.total, false, 8).forEach(function (str) {
-                        totalTxt += str.textContent
-                    })
-                    newTable += '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
-                    tx.hash + '">' + tx.hash + '</a></span></td>' +
-                    '<td class="mono fs15 text-right">' + totalTxt +'</td>' +
-                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
-                    '<td class="mono fs15">' + tx.size + '</td></tr>'
-                })
-                $('#tickets tbody').html(newTable)
-
-                newTable = ""
-                m.tx.forEach(function (tx) {
-                    var totalTxt = "" 
-                    humanize.decimalParts(tx.total, false, 8).forEach(function (str) {
-                        totalTxt += str.textContent
-                    })
-                    newTable += '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
-                    tx.hash + '">' + tx.hash + '</a></span></td>' +
-                    '<td class="mono fs15 text-right">' + totalTxt +'</td>' +
-                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
-                    '<td class="mono fs15">' + tx.size + '</td></tr>'
-                })
-                $('#transactions tbody').html(newTable)
+            // list transactions
+            if (window.location.pathname == "/") {
+                $('#transactions').html(txRowsHTML(m.tx.slice(5)))
                 setTimeElements()
             }
-
-            if (window.location.pathname == "/") {
-                var newTable = ""
-                for (var i= 0; i < 5; i++) {
-                    tx = m.tx[i]
-                    var totalTxt = "" 
-                    humanize.decimalParts(tx.total, false, 8).forEach(function (str) {
-                        totalTxt += str.textContent
-                    })
-                    newTable += '<tr><td class="break-word"><span><a class="hash" href="/tx/' +
-                    tx.hash + '">' + tx.hash + '</a></span></td>' +
-                    '<td class="mono fs15 text-right">' + totalTxt +'</td>' +
-                    '<td class="mono fs15 text-right" data-age="' + tx.time +'"></td>' +
-                    '<td class="mono fs15">' + tx.size + '</td></tr>'
-                }
-                $('#mini-transactions tbody').html(newTable)
+            if (window.location.pathname == "/mempool") {
+                console.log("ticketRows", txRowsHTML(m.tickets))
+                $('#tickets').html(txRowsHTML(m.tickets))
+                $('#transactions').html(txRowsHTML(m.tx))
                 setTimeElements()
             }
         };
@@ -385,3 +358,4 @@
 {{end}}
 
 {{define "decimalParts"}}<span class="int">{{ index . 0 }}</span><span class="dot">.</span><span class="decimal">{{ index . 1 }}<span class="trailing-zeroes">{{ index . 2 }}</span></span>{{end}}
+

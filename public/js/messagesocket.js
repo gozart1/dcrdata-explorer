@@ -46,7 +46,7 @@ var MessageSocket = function(uri) {
       event: eventID,
       message: message
     });
-    console.log("send", payload)
+    // console.log("send", payload)
     ws.send(payload);
     return this;
   };

@@ -310,6 +310,29 @@ body.darkBG .json-block {
 .table-fixed {
   table-layout: fixed;
 }
+/*flex table*/
+.flex-table .header {
+  padding: 0.36rem .3rem;
+  font-weight: 600;
+}
+.flex-table .rows > div {
+  padding-left: .3rem;
+  padding-right: .3rem;
+}
+.lg-height-rows > div {
+  padding-top: .4rem;
+  padding-bottom: .4rem;
+}
+.md-height-rows > div {
+  padding-top: .2rem;
+  padding-bottom: .2rem;
+}
+.striped-rows > div:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+.striped-rows > div:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
 
 .addressAndScriptData {
   overflow: hidden;
@@ -371,6 +394,12 @@ body.darkBG .json-block {
   display: inline-block;
   word-wrap: break-word;
   transition: .133s transform;
+}
+.truncate-hash {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /*resemble voting.decred.org*/

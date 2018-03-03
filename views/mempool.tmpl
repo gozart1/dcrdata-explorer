@@ -8,53 +8,45 @@
             <div class="row">
                 <div class="col-sm-6">
                     <h4><span>Tickets (<span id="mempool_ticket_number" class="mono fs24">{{.Mempool.NumTickets}}</span>)</span></h4>
-                    <table class="table table-sm striped" id="tickets">
-                        <thead>
-                            <th>Hash</th>
-                            <th class="text-right">Price (DCR)</th>
-                            <th class="text-right">Time in Mempool</th>
-                            <th>Size</th>
-                        </thead>
-                        <tbody>
+                    <div class="mb-3 flex-table">
+                        <div class="d-flex justify-content-end fs14 header" style="background: rgba(0, 0, 0, 0.06) !important;">
+                            <span class="lh1rem mr-auto">Hash</span>
+                            <span style="flex: 0 0 105px" class="lh1rem text-right ml-1">Price (DCR)</span>
+                            <span style="flex: 0 0 65px" class="lh1rem text-right ml-1">Time in Mempool</span>
+                            <span style="flex: 0 0 50px" class="lh1rem text-right ml-1">Size</span>
+                        </div>
+                        <div id="tickets" class="striped-rows lg-height-rows rows">
                             {{range .Mempool.Tickets}}
-                            <tr>
-                                <td class="break-word">
-                                    <span>
-                                        <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
-                                    </span>
-                                </td>
-                                <td class="mono fs15 text-right">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</td>
-                                <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
-                                <td class="mono fs15">{{.Size}} B</td>
-                            </tr>
+                            <div class="d-flex">
+                                <a class="hash truncate-hash" style="flex: 1 1 auto" href="/tx/{{.Hash}}">{{.Hash}}</a>
+                                <span style="flex: 0 0 105px" class="mono fs15 text-right ml-1">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</span>
+                                <span style="flex: 0 0 65px" class="mono fs15 text-right ml-1" data-age="{{.Time}}"></span>
+                                <span style="flex: 0 0 50px" class="mono fs15  text-right ml-1">{{.Size}} B</span>
+                            </div>
                             {{end}}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-sm-6">
                     <h4><span>Transactions (<span id="mempool_tx_number" class="mono fs24">{{len .Mempool.Transactions}}</span>)</span></h4>
-                    <table class="table table-sm striped" id="transactions">
-                        <thead>
-                            <th>Hash</th>
-                            <th class="text-right">Total Sent (DCR)</th>
-                            <th class="text-right">Time in Mempool</th>
-                            <th>Size</th>
-                        </thead>
-                        <tbody>
+                    <div class="mb-3 flex-table">
+                        <div class="d-flex justify-content-end fs14 header" style="background: rgba(0, 0, 0, 0.06) !important;">
+                            <span class="lh1rem mr-auto">Hash</span>
+                            <span style="flex: 0 0 105px" class="lh1rem text-right ml-1">Total Sent (DCR)</span>
+                            <span style="flex: 0 0 65px" class="lh1rem text-right ml-1">Time in Mempool</span>
+                            <span style="flex: 0 0 50px" class="lh1rem text-right ml-1">Size</span>
+                        </div>
+                        <div id="transactions" class="transaction striped-rows lg-height-rows rows">
                             {{range .Mempool.Transactions}}
-                            <tr>
-                                <td class="break-word">
-                                    <span>
-                                        <a class="hash" href="/tx/{{.Hash}}">{{.Hash}}</a>
-                                    </span>
-                                </td>
-                                <td class="mono fs15 text-right">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</td>
-                                <td class="mono fs15 text-right" data-age="{{.Time}}"></td>
-                                <td class="mono fs15">{{.Size}} B</td>
-                            </tr>
+                            <div class="d-flex">
+                                <a class="hash truncate-hash" style="flex: 1 1 auto" href="/tx/{{.Hash}}">{{.Hash}}</a>
+                                <span style="flex: 0 0 105px" class="mono fs15 text-right ml-1">{{template "decimalParts" (float64AsDecimalParts .TotalOut false)}}</span>
+                                <span style="flex: 0 0 65px" class="mono fs15 text-right ml-1" data-age="{{.Time}}"></span>
+                                <span style="flex: 0 0 50px" class="mono fs15  text-right ml-1">{{.Size}} B</span>
+                            </div>
                             {{end}}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
